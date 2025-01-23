@@ -140,6 +140,8 @@ async function testScraper() {
                 });
             }, currentPage);
 
+            console.log(`Found ${jobListings.length} job listings on page ${currentPage}`);
+
             // For each job listing, open detail page & fetch more data
             for (let job of jobListings) {
                 if (job.jobUrl) {
