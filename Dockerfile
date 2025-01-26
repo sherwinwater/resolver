@@ -27,6 +27,7 @@ COPY package*.json ./
 # Install Node.js dependencies
 RUN npm update
 RUN npm install
+RUN npx puppeteer browsers install firefox
 
 # Copy the rest of the application code
 COPY . .
@@ -36,4 +37,4 @@ EXPOSE 3000
 
 # Command to run the application
 # CMD ["npm", "run","start"]
-CMD ["sh", "-c", "npm install && npm run start && tail -f /dev/null"]
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x1024x16 & export DISPLAY=:99 && npm run start && tail -f /dev/null"]
