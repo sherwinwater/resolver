@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     ca-certificates \
     apt-transport-https \
-    xvfb \
+    xvfb firefox-esr \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Google Chrome

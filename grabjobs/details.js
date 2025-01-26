@@ -19,7 +19,7 @@ async function appendToFile(filename, data) {
 }
 
 const realBrowserOption = {
-    args: ["--start-maximized", "--window-size=1200,1300"],
+    args: ["--window-size=1300,768"],
     turnstile: true,
     headless: false,
     customConfig: {},

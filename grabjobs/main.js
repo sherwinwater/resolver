@@ -44,7 +44,7 @@ async function testScraper() {
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   try {
-    const webpageUrl = "https://grabjobs.co/denmark/jobs-in-denmark";
+    const webpageUrl = "https://grabjobs.co/canada/jobs-in-canada";
     const url = new URL(webpageUrl);
     const country = url.pathname.split("/")[1];
     const filename = `${country}_job_listings.json`;
