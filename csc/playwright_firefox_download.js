@@ -4,7 +4,7 @@ const path = require('path');
 
 (async () => {
     // Launch Firefox browser
-    const browser = await firefox.launch();
+    const browser = await firefox.launch({ headless: true });
     const context = await browser.newContext({
         acceptDownloads: true, // Enable accepting downloads
     });
@@ -29,7 +29,7 @@ const path = require('path');
         }
     }
 
-    await page.waitForTimeout(5000); // Adjust the timeout as needed
+    await page.waitForTimeout(2000); // Adjust the timeout as needed
 
     await browser.close();
 })();
