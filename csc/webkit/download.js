@@ -1,24 +1,39 @@
-const {playwright, firefox } = require('playwright');
+const { webkit } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
 (async () => {
-    const browserType = 'firefox';
-    // Launch Firefox browser
-    const browser = await firefox.launch({ headless: true });
-    // const browser = await playwright[browserType].launch({ headless: true });
+    // Launch WebKit browser
+    const browser = await webkit.launch({ headless: false });
     const context = await browser.newContext({
         acceptDownloads: true, // Enable accepting downloads
     });
     const page = await context.newPage();
 
+    // Intercept requests to modify headers for PDF files
+    // await page.route('**/*', async (route, request) => {
+    //     if (request.resourceType() === 'document' && request.url().endsWith('.pdf')) {
+    //         const response = await page.request.fetch(request);
+    //         const headers = {
+    //             ...response.headers(),
+    //             'Content-Disposition': 'attachment',
+    //         };
+    //         await route.fulfill({npx playwright install webkit
+    //             response,
+    //             headers,
+    //         });
+    //     } else {
+    //         await route.continue();
+    //     }
+    // });
+
+    // Listen for download events
     page.on('download', async (download) => {
         const downloadPath = path.join(__dirname, download.suggestedFilename());
         await download.saveAs(downloadPath);
         console.log(`Downloaded file saved to: ${downloadPath}`);
     });
 
-    // const url = 'https://ai.wharton.upenn.edu/wp-content/uploads/2024/11/AI-Report_Full-Report.pdf';
     const url = 'https://csc.gov.ph/career/job/4295201';
 
     try {

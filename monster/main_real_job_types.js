@@ -41,7 +41,7 @@ async function test() {
         customConfig: {
             userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         },
-        turnstile: true,
+        turnstile: false,
         connectOption: {},
         disableXvfb: false,
         ignoreAllFlags: false
@@ -50,9 +50,11 @@ async function test() {
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     try {
-        const startUrl = 'https://www.monster.ca/jobs/browse/l-alberta';
-        // const startUrl = 'https://www.monster.ca/jobs/q-aba-therapist-jobs';
-        // const startUrl = 'https://www.monster.ca/jobs/c-aecom';
+        // const startUrl = 'https://www.monster.ca/jobs/browse/l-alberta';
+        const startUrl = 'https://www.monster.ca/jobs/q-aba-therapist-jobs'; // works to pass verification
+        // const startUrl = 'https://www.monster.ca/jobs/c-dentalcorp?page=1'; // get capcha
+        // const startUrl = 'https://www.monster.ca/jobs/c-aecom'; // get capcha
+
         const filename = 'c-aecom_jobs.json';
 
         // Navigate to the starting URL

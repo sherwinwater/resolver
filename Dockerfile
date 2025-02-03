@@ -29,6 +29,12 @@ RUN npm update
 RUN npm install
 RUN npx puppeteer browsers install firefox
 
+# Install Playwright dependencies for Linux
+RUN npx playwright install-deps
+
+# Install WebKit browser binary
+RUN npx playwright install webkit
+npx playwright test --headed
 # Copy the rest of the application code
 COPY . .
 
