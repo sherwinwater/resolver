@@ -18,47 +18,38 @@ async function appendToFile(filename, data) {
     }
 }
 
-const isHeadless = false;
+// const isHeadless = false;
 // const isHeadless = process.env.HEADLESS === 'true';
 
 async function test() {
     console.log("start")
     const { browser, page } = await connect({
-        headless: isHeadless,
-        args: [
-            '--disable-web-security',
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-accelerated-2d-canvas',
-            '--disable-gpu',
-            '--window-size=1020x1280',
-            '--hide-scrollbars',
-            '--disable-notifications',
-            '--disable-extensions',
-            '--force-device-scale-factor=1',
-            '--disable-blink-features=AutomationControlled',
-            ...(isHeadless ? ['--display=' + process.env.DISPLAY] : [])
-        ],
-        customConfig: {
-            userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        },
+        headless: false,
         turnstile: true,
-        connectOption: {},
-        disableXvfb: false,
-        ignoreAllFlags: false
     });
 
-    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    // const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    function delay(min, max=8000) {
+        const randomTime = Math.floor(Math.random() * (max - min + 1)) + min;
+        console.log('delay',randomTime);
+        return new Promise(resolve => setTimeout(resolve, randomTime));
+    }
 
     try {
         const webpageUrl = 'https://www.monster.ca/jobs/search?q=&where=canada&page=1';
         const url = new URL(webpageUrl);
         const country = url.pathname.split('/')[1];
         const filename = `${country}_job_listings.json`;
+        await page.screenshot({ path:  'screenshot_first.png', fullPage: true });
+
 
         await page.goto(webpageUrl, { waitUntil: 'networkidle0' });
-        await delay(2000);
+        await page.screenshot({ path:  'screenshot_after.png', fullPage: true });
+
+        await delay(8000,10000);
+        await page.screenshot({ path:  'screenshot_delayed.png', fullPage: true });
+        let pageCount =0
+
 
         while (true) {
             try {
@@ -97,13 +88,21 @@ async function test() {
                 }
                 return false;
             });
+            // await page.screenshot({ path:  'screenshot_next_page.png', fullPage: true });
+
 
             if (!hasNextPage) {
                 console.log('No more pages to load');
                 break;
             }
+            pageCount +=1;
+            if (pageCount >0 && pageCount % 7 === 0){
+                await delay(30000,60000);
+            }else{
+                await delay(3000,8000); 
+             }// Wait for the next page to load
+            // await page.screenshot({ path:  'screenshot_next_page_delayed.png', fullPage: true });
 
-            await delay(5000); // Wait for the next page to load
         }
     } catch (error) {
         console.error('Error during scraping:', error);
