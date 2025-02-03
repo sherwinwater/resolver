@@ -18,6 +18,7 @@ async function appendToFile(filename, data) {
     }
 }
 
+
 const realBrowserOption = {
     args: [
         "--window-size=1300,768",
@@ -25,8 +26,7 @@ const realBrowserOption = {
         "--disable-notifications",
         "--disable-popup-blocking",
         "--disable-web-security",
-        "--lang=fr-FR",
-        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
+        "--lang=fr-FR"
     ],
     turnstile: true,
     headless: false,
@@ -89,7 +89,7 @@ async function testScraper() {
         // Try to close or skip popup
         try {
             // Wait for popup container
-            await page.waitForSelector("div.sc-sq9wn4-1.dHlmoX", { timeout: 7000 });
+            // await page.waitForSelector("div.sc-sq9wn4-1.dHlmoX", { timeout: 7000 });
             // Use XPath to find the button with text 'Continuer sans accepter'
             const [skipButton] = await page.$x("//button[contains(., 'Continuer sans accepter')]");
             if (skipButton) {
@@ -212,7 +212,7 @@ async function testScraper() {
             }
 
             // Extra delay
-            await delay(2000);
+            await delay(10000);
         }
     } catch (error) {
         console.error("Error during scraping:", error);

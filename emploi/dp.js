@@ -39,7 +39,7 @@ async function getJobDetails(browser, jobUrl) {
     const detailPage = await browser.newPage();
     try {
         await detailPage.goto(jobUrl, { waitUntil: "networkidle0", timeout: 60000 });
-        await detailPage.waitForSelector('[data-v-69b26c0f]', { timeout: 15000 });
+        // await detailPage.waitForSelector('[data-v-69b26c0f]', { timeout: 15000 });
         await new Promise(r => setTimeout(r, 2000 + Math.random() * 1000));
 
         const details = await detailPage.evaluate(() => {
