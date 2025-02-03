@@ -54,12 +54,16 @@ async function test() {
         const startUrl = 'https://www.monster.ca/jobs/q-aba-therapist-jobs'; // works to pass verification
         // const startUrl = 'https://www.monster.ca/jobs/c-dentalcorp?page=1'; // get capcha
         // const startUrl = 'https://www.monster.ca/jobs/c-aecom'; // get capcha
+        const screenshotPath = 'screenshot.png';
 
         const filename = 'c-aecom_jobs.json';
 
         // Navigate to the starting URL
         await page.goto(startUrl, { waitUntil: 'networkidle0' });
+        await page.screenshot({ path:  'screenshot_first.png', fullPage: true });
         await delay(5000);
+        await page.screenshot({ path:  'screenshot_delayed.png', fullPage: true });
+        console.log(`Screenshot saved as ${screenshotPath}`);
 
         while (true) {
             // Wait for job cards to load
@@ -68,7 +72,11 @@ async function test() {
                     () => document.querySelectorAll('[data-testid="JobCard"]').length > 0,
                     { timeout: 10000 }
                 );
+                await page.screenshot({ path:  'screenshot_waitforfunciton.png', fullPage: true });
+
             } catch (e) {
+                await page.screenshot({ path:  'screenshot_catch_error.png', fullPage: true });
+
                 console.log("No job cards found on the page.");
                 break;
             }
