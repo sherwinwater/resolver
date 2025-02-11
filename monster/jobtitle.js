@@ -154,67 +154,55 @@ async function processChildMission(browser, mission) {
     const page = await browser.newPage();
     try {
         console.log(`Processing mission: ${mission.startUrl}`);
-
         await page.goto(mission.startUrl, { waitUntil: 'networkidle0' });
 
-        // Initial delay to ensure everything has a chance to load
         await delay(5000, 8000);
 
-        // 1) Try to handle the cookie popup via standard click
+        // 1) Try closing cookie popup
         // const acceptCookiesSelector = '#onetrust-accept-btn-handler';
         // try {
         //     await page.waitForSelector(acceptCookiesSelector, { timeout: 5000 });
-        //     console.log('Cookie popup button found. Attempting to click...');
-        //     await page.$eval(acceptCookiesSelector, (btn) => btn.click());
-        //     await page.waitForTimeout(3000);
-        //     console.log('Cookie popup clicked.');
+        //     await page.click(acceptCookiesSelector);
+        //     console.log("Cookie popup clicked.");
+        //     await page.waitForTimeout(2000);
         // } catch (error) {
-        //     console.log('Cookie popup not found or click did not succeed within timeout. Attempting to remove it forcibly...');
-        //     try {
-        //         // 2) As a fallback, forcibly remove the cookie banner overlay
-        //         await page.evaluate(() => {
-        //             const cookieBanner = document.querySelector('#onetrust-consent-sdk');
-        //             if (cookieBanner) {
-        //                 cookieBanner.remove();
-        //                 console.log('Forcibly removed cookie banner from DOM.');
-        //             }
-        //         });
-        //         await page.waitForTimeout(2000);
-        //     } catch (removalError) {
-        //         console.log('Could not forcibly remove cookie banner. Proceeding anyway...');
-        //     }
+        //     console.log("Cookie popup not found or couldn't be clicked within 5s. Continuing...");
         // }
 
-        // 3) Scroll until "No More Results" button is visible
+        // 2) Scroll in increments until we find 'No More Results' button or reach a max iteration
         const noMoreResultsSelector = 'button[data-testid="svx-no-more-results-disabled-button"]';
-        console.log('Scrolling down until we find "No More Results" button...');
-        await page.evaluate(async (selector) => {
-            function elementVisible(el) {
-                if (!el) return false;
-                const rect = el.getBoundingClientRect();
-                return !(rect.bottom < 0 || rect.top > window.innerHeight);
+        const maxScrolls = 50;  // Adjust this depending on how many times you want to attempt scrolling
+        let hasNoMoreResultsButton = false;
+
+        for (let i = 0; i < maxScrolls; i++) {
+            // Check if 'No More Results' exists
+            const noMoreButton = await page.$(noMoreResultsSelector);
+            if (noMoreButton) {
+                console.log("Reached the end of the listings (No More Results button found).");
+                hasNoMoreResultsButton = true;
+                break;
             }
 
-            // Polling approach
-            while (!document.querySelector(selector)) {
+            // Scroll one viewport down
+            await page.evaluate(() => {
                 window.scrollBy(0, window.innerHeight);
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-            }
+            });
 
-            // Once we find the button, ensure it’s actually in view
-            const button = document.querySelector(selector);
-            while (!elementVisible(button)) {
-                button.scrollIntoView({ behavior: 'smooth' });
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-            }
-        }, noMoreResultsSelector);
+            // Give the site time to load new content
+            delay(2000, 4000);
+        }
 
-        console.log('Reached the end of the listings (No More Results button found).');
+        if (!hasNoMoreResultsButton) {
+            console.log(
+                "Warning: 'No More Results' button not found within max scroll attempts. " +
+                "Continuing with whatever data is loaded..."
+            );
+        }
 
-        // 4) Extract all job listings
+        // 3) Extract all job listings
         const currentPage = new URL(await page.url()).searchParams.get('page') || '1';
         const jobListings = await page.evaluate((pageNum, source) => {
-            return Array.from(document.querySelectorAll('[data-testid="JobCard"]')).map((card) => ({
+            return Array.from(document.querySelectorAll('[data-testid="JobCard"]')).map(card => ({
                 title: card.querySelector('[data-testid="jobTitle"]')?.textContent?.trim() || '',
                 company: card.querySelector('[data-testid="company"]')?.textContent?.trim() || '',
                 location: card.querySelector('[data-testid="jobDetailLocation"]')?.textContent?.trim() || '',
@@ -226,8 +214,8 @@ async function processChildMission(browser, mission) {
             }));
         }, currentPage, mission.initial_link_location);
 
-        // 5) For each job listing, open detail link in a new tab and fetch page content
-        console.log(`Found ${jobListings.length} job listings on page ${currentPage}. Fetching details...`);
+        // 4) For each listing, open the detail link in a new tab
+        console.log(`Found ${jobListings.length} job listings on page ${currentPage}.`);
 
         for (let job of jobListings) {
             if (job.jobUrl) {
@@ -247,7 +235,6 @@ async function processChildMission(browser, mission) {
 
         console.log(`Mission ${mission.startUrl}: Collected ${jobListings.length} job listings with details.`);
         return jobListings;
-
     } catch (error) {
         console.error(`Error processing mission ${mission.startUrl}:`, error);
         return [];
@@ -264,7 +251,7 @@ async function processChildMission(browser, mission) {
  */
 async function main() {
     // Configure mission limit from environment or default to 100.
-    const missionLimit = process.env.CHILD_MISSION_LIMIT ? parseInt(process.env.CHILD_MISSION_LIMIT) : 3;
+    const missionLimit = process.env.CHILD_MISSION_LIMIT ? parseInt(process.env.CHILD_MISSION_LIMIT) : 2;
 
     const { browser } = await connect({
         headless: false,
