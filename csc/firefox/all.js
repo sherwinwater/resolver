@@ -5,7 +5,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 (async () => {
     const browser = await puppeteer.launch({
         browser: 'firefox',
-        headless: true, // Set to true if you don't want to see the browser
+        headless: false, // Set to true if you don't want to see the browser
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized']
     });
 

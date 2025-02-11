@@ -36,7 +36,11 @@ async function test() {
     }
 
     try {
-        const webpageUrl = 'https://www.monster.ca/jobs/search?q=&where=canada&page=1';
+        // const webpageUrl = 'https://www.monster.ca/jobs/search?q=&where=canada&page=1'; // canada, works
+        // const webpageUrl = "https://www.monster.ca/jobs/c-aecom?page=1"; // company, not work.
+        // const webpageUrl = "https://www.monster.ca/jobs/q-history-jobs-l-cypress-county-alberta?page=1"; // location, works.
+        const webpageUrl = "https://www.monster.ca/jobs/q-babysitting-jobs"; // job title, works
+        // const webpageUrl = "https://www.monster.ca/jobs/l-acme-alberta?page=1"; // location, works
         const url = new URL(webpageUrl);
         const country = url.pathname.split('/')[1];
         const filename = `${country}_job_listings.json`;
