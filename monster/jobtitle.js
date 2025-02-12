@@ -276,12 +276,11 @@ async function main() {
 
         let allJobs = [];
         for (const mission of missions) {
-            console.log(`Processing mission: ${mission.startUrl}`);
             const missionResult = await processChildMission(browser, mission);
-            allJobs = allJobs.concat(missionResult);
+            await appendToFile(file_name, missionResult); // Append data after each mission.
+            console.log(`Appended results of mission to ${file_name}`);
         }
 
-        await appendToFile(file_name,allJobs);
         console.log(`Saved a total of ${allJobs.length} job listings to ${file_name}`);
     } catch (error) {
         console.error('Error during main execution:', error);
