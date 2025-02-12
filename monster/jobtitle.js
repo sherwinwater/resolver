@@ -157,6 +157,7 @@ async function processChildMission(browser, mission) {
         await page.goto(mission.startUrl, { waitUntil: 'networkidle0' });
 
         await delay(5000, 8000);
+        console.log(`Delaying for after opening start page for ${mission.startUrl} `);
 
         // 1) Try closing cookie popup
         // const acceptCookiesSelector = '#onetrust-accept-btn-handler';
@@ -190,6 +191,7 @@ async function processChildMission(browser, mission) {
 
             // Give the site time to load new content
             delay(2000, 4000);
+            console.log(`Scrolled ${i + 1} times.`);
         }
 
         if (!hasNoMoreResultsButton) {
@@ -222,7 +224,9 @@ async function processChildMission(browser, mission) {
                 const detailPage = await browser.newPage();
                 try {
                     await detailPage.goto(job.jobUrl, { waitUntil: 'networkidle0' });
+                    console.log(`Opened detail page for ${job.jobUrl}`);
                     await delay(3000, 5000);
+                    console.log(`Delaying for after opening detail page for ${job.jobUrl} `);
                     job.detailContent = await detailPage.content();
                 } catch (err) {
                     console.error(`Error fetching details for ${job.jobUrl}:`, err);
@@ -251,7 +255,7 @@ async function processChildMission(browser, mission) {
  */
 async function main() {
     // Configure mission limit from environment or default to 100.
-    const missionLimit = process.env.CHILD_MISSION_LIMIT ? parseInt(process.env.CHILD_MISSION_LIMIT) : 2;
+    const missionLimit = process.env.CHILD_MISSION_LIMIT ? parseInt(process.env.CHILD_MISSION_LIMIT) : 5;
 
     const { browser } = await connect({
         headless: false,
@@ -267,8 +271,15 @@ async function main() {
         console.log(`Prepared ${missions.length} child missions.`);
 
         // PAYLOAD: Process each child mission concurrently.
-        const missionResults = await Promise.all(missions.map(mission => processChildMission(browser, mission)));
-        const allJobs = missionResults.flat();
+        // const missionResults = await Promise.all(missions.map(mission => processChildMission(browser, mission)));
+        // const allJobs = missionResults.flat();
+
+        let allJobs = [];
+        for (const mission of missions) {
+            console.log(`Processing mission: ${mission.startUrl}`);
+            const missionResult = await processChildMission(browser, mission);
+            allJobs = allJobs.concat(missionResult);
+        }
 
         await appendToFile(file_name,allJobs);
         console.log(`Saved a total of ${allJobs.length} job listings to ${file_name}`);
