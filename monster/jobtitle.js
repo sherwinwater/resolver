@@ -283,7 +283,10 @@ async function main() {
         // const allJobs = missionResults.flat();
 
         let allJobs = [];
+        let mission_count = 0;
         for (const mission of missions) {
+            mission_count += 1;
+            console.log(`Processing mission ${mission_count}`);
             const missionResult = await processChildMission(browser, mission);
             await appendToFile(file_name, missionResult); // Append data after each mission.
             console.log(`Appended results of mission to ${file_name}`);
