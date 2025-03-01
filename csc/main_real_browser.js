@@ -10,24 +10,35 @@ import { connect } from 'puppeteer-real-browser';
             args: ["--start-maximized"], // Start browser maximized
             turnstile: true, // Handle turnstile challenges if present
             headless: false, // Run in non-headless mode
-            customConfig: {}, // Add custom Chrome configuration if needed
+            customConfig: {
+                prefs: {
+                    download: {
+                        default_directory: "/Users/shuwenwang/Documents/dev/pocs/resolver/csc/downloads",
+                        prompt_for_download: false,
+                        open_pdf_in_system_reader: false
+                    },
+                    plugins: {
+                        always_open_pdf_externally: true
+                    }
+                }
+            },
             connectOption: {
                 defaultViewport: null, // Disable viewport resizing
             },
-            plugins: [
-                StealthPlugin(),
-                UserPreferencesPlugin({
-                    userPrefs: {
-                        download: {
-                            prompt_for_download: false,
-                            open_pdf_in_system_reader: true,
-                        },
-                        plugins: {
-                            always_open_pdf_externally: true,
-                        },
-                    },
-                }),
-            ],
+            // plugins: [
+            //     StealthPlugin(),
+            //     UserPreferencesPlugin({
+            //         userPrefs: {
+            //             download: {
+            //                 prompt_for_download: false,
+            //                 open_pdf_in_system_reader: true,
+            //             },
+            //             plugins: {
+            //                 always_open_pdf_externally: true,
+            //             },
+            //         },
+            //     }),
+            // ],
         });
 
         const downloadPath = path.resolve("./downloads"); // Define the download path
@@ -40,13 +51,21 @@ import { connect } from 'puppeteer-real-browser';
         console.log("Navigating to page...");
         await page.goto(url, {
             waitUntil: ['domcontentloaded', 'networkidle0'], // Wait until the page is fully loaded
+        }).catch(error => {
+            if (!error.message.includes('net::ERR_ABORTED')) {
+                console.log(`Error downloading pdf: ${error}`);
+            } else {
+                this.debug(`Puppeteer downloading pdf..`);
+
+                // process the pdf download here
+            }
         });
 
-        const client = await page.target().createCDPSession();
-        await client.send('Page.setDownloadBehavior', {
-            behavior: 'allow',
-            downloadPath: './downloads', // Specify your download directory
-        });
+        // const client = await page.target().createCDPSession();
+        // await client.send('Page.setDownloadBehavior', {
+        //     behavior: 'allow',
+        //     downloadPath: './downloads', // Specify your download directory
+        // });
 
 
         await page.waitForTimeout(1000); // Short delay to ensure stability

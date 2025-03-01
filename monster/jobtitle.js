@@ -219,21 +219,29 @@ async function processChildMission(browser, mission) {
         // 4) For each listing, open the detail link in a new tab
         console.log(`Found ${jobListings.length} job listings on page ${currentPage}.`);
 
+        let count =0;
+
         for (let job of jobListings) {
+            count +=1
             if (job.jobUrl) {
                 const detailPage = await browser.newPage();
                 try {
                     await detailPage.goto(job.jobUrl, { waitUntil: 'networkidle0' });
                     console.log(`Opened detail page for ${job.jobUrl}`);
-                    await delay(3000, 5000);
                     console.log(`Delaying for after opening detail page for ${job.jobUrl} `);
                     job.detailContent = await detailPage.content();
+                    job.detailContent = 'done';
+                    await delay(3000, 5000);
                 } catch (err) {
                     console.error(`Error fetching details for ${job.jobUrl}:`, err);
                     job.detailContent = null;
                 } finally {
                     await detailPage.close();
                 }
+            }
+
+            if (count % 7 === 0) {
+                await delay(30000, 50000);
             }
         }
 
@@ -255,7 +263,7 @@ async function processChildMission(browser, mission) {
  */
 async function main() {
     // Configure mission limit from environment or default to 100.
-    const missionLimit = process.env.CHILD_MISSION_LIMIT ? parseInt(process.env.CHILD_MISSION_LIMIT) : 5;
+    const missionLimit = process.env.CHILD_MISSION_LIMIT ? parseInt(process.env.CHILD_MISSION_LIMIT) : 50;
 
     const { browser } = await connect({
         headless: false,
@@ -279,6 +287,7 @@ async function main() {
             const missionResult = await processChildMission(browser, mission);
             await appendToFile(file_name, missionResult); // Append data after each mission.
             console.log(`Appended results of mission to ${file_name}`);
+            await delay(30000, 50000);
         }
 
         console.log(`Saved a total of ${allJobs.length} job listings to ${file_name}`);
