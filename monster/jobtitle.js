@@ -311,4 +311,70 @@ async function main() {
     }
 }
 
-main();
+// ... [Keep your existing imports and helper functions here] ...
+
+/**
+ * Processes missions in batches concurrently.
+ * @param {object} browser - The connected Puppeteer browser instance.
+ * @param {Array} missions - Array of child mission objects.
+ * @param {number} batchSize - Number of missions to process in parallel.
+ */
+async function processMissionsInBatches(browser, missions, batchSize = 10) {
+    for (let i = 100; i < missions.length; i += batchSize) {
+      const batch = missions.slice(i, i + batchSize);
+      console.log(`Processing batch: missions ${i + 1} to ${i + batch.length}`);
+  
+      // Run the missions concurrently for the current batch.
+      const batchResults = await Promise.all(
+        batch.map((mission) => processChildMission(browser, mission))
+      );
+  
+      // Append each mission's results to the file.
+      for (const missionResult of batchResults) {
+        await appendToFile(file_name, missionResult);
+      }
+      
+      // Optional delay after each batch before processing the next one.
+      await delay(30000, 50000);
+    }
+  }
+  
+  /**
+   * MAIN FUNCTION
+   *
+   * Connects to the browser, runs the prepare phase to obtain child missions,
+   * and then processes each mission in parallel batches.
+   */
+  async function mainParallel() {
+    // Configure mission limit from environment or default to 10000.
+    const missionLimit = process.env.CHILD_MISSION_LIMIT ? parseInt(process.env.CHILD_MISSION_LIMIT) : 10000;
+  
+    const { browser } = await connect({
+      headless: false,
+      turnstile: true,
+      args: [
+        "--window-size=920,980"
+      ]
+    });
+  
+    try {
+      // PREPARE: Get child missions using the specified workflow and XPath selectors.
+      //const missions = await prepareChildMissions(browser, missionLimit);
+      //console.log(`Prepared ${missions.length} child missions.`);
+
+      // get mission data from file
+        const missions = await readFile(file_mission_name, 'utf8');   
+  
+      // PAYLOAD: Process missions in parallel batches (10 at a time).
+      await processMissionsInBatches(browser, missions, 10);
+  
+      console.log(`Completed processing all missions.`);
+    } catch (error) {
+      console.error('Error during main execution:', error);
+    } finally {
+      await browser.close();
+    }
+  }
+    
+
+mainParallel();
