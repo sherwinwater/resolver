@@ -8,6 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const file_name = join(__dirname, "monster_ca_job_listings.json");
+const file_mission_name = join(__dirname, "missions.json");
 
 console.log('File name:', file_name);
 // async function createFile() {
@@ -42,7 +43,7 @@ async function appendToFile(filename = file_name, data) {
 // Utility: Randomized delay.
 function delay(min, max = 8000) {
     const randomTime = Math.floor(Math.random() * (max - min + 1)) + min;
-    console.log('Delaying for', randomTime, 'ms');
+    // console.log('Delaying for', randomTime, 'ms');
     return new Promise(resolve => setTimeout(resolve, randomTime));
 }
 
@@ -78,7 +79,7 @@ async function evaluateXPath(page, xpath) {
  * The function limits the number of child missions based on missionLimit.
  */
 async function prepareChildMissions(browser, missionLimit = 100) {
-    const baseUrl = "https://www.monster.ca/jobs/";
+    const baseUrl = "https://www.monster.com/jobs/";
     const page = await browser.newPage();
     try {
         await page.goto(baseUrl, { waitUntil: 'networkidle0' });
@@ -133,6 +134,10 @@ async function prepareChildMissions(browser, missionLimit = 100) {
             if (missionLimit && missions.length >= missionLimit) break;
         }
         console.log(`Prepared ${missions.length} child missions.`);
+        console.log("missions", missions);
+
+        await appendToFile(file_mission_name, missions); // Append data after each mission.
+        console.log(`Appended results of mission to ${file_mission_name}`);
         return missions;
     } catch (error) {
         console.error('Error during prepareChildMissions:', error);
