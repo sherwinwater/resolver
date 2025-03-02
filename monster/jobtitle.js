@@ -3,6 +3,7 @@ import { writeFile, readFile, access } from 'fs/promises';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { promises as fs } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -359,12 +360,16 @@ async function processMissionsInBatches(browser, missions, batchSize = 10) {
   
     try {
       // PREPARE: Get child missions using the specified workflow and XPath selectors.
+
+
       //const missions = await prepareChildMissions(browser, missionLimit);
       //console.log(`Prepared ${missions.length} child missions.`);
 
       // get mission data from file
-        const missions = await readFile(file_mission_name, 'utf8');   
-  
+        const fileContent = await fs.readFile(file_mission_name, 'utf8');
+        const missions = JSON.parse(fileContent);
+        console.log(`Read ${missions.length} child missions from ${missions}`);
+
       // PAYLOAD: Process missions in parallel batches (10 at a time).
       await processMissionsInBatches(browser, missions, 10);
   
@@ -375,6 +380,5 @@ async function processMissionsInBatches(browser, missions, batchSize = 10) {
       await browser.close();
     }
   }
-    
 
 mainParallel();
