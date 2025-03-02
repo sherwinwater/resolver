@@ -92,8 +92,10 @@ async function prepareChildMissions(browser, missionLimit = 100) {
         console.log(`Found ${jobTitleElements.length} job title elements.`);
 
         let missions = [];
+        let count_job_title = 0;
         // Process each job title.
         for (const jobTitleData of jobTitleElements) {
+            count_job_title += 1;
             const jobTitleHref = jobTitleData.href;
             if (!jobTitleHref) continue;
 
@@ -117,7 +119,7 @@ async function prepareChildMissions(browser, missionLimit = 100) {
 
             // Use our helper to extract sub job title data.
             const subJobTitleElements = await evaluateXPath(newTab, subJobTitleXPath);
-            console.log(`Found ${subJobTitleElements.length} sub job title elements in ${jobTitleHref}`);
+            console.log(`--JobTitle ${count_job_title}: Found ${subJobTitleElements.length} sub job title elements in ${jobTitleHref}`);
 
             // Step 4: Create child missions from the sub job title elements.
             for (const subElemData of subJobTitleElements) {
@@ -133,11 +135,9 @@ async function prepareChildMissions(browser, missionLimit = 100) {
             await newTab.close();
             if (missionLimit && missions.length >= missionLimit) break;
         }
-        console.log(`Prepared ${missions.length} child missions.`);
-        console.log("missions", missions);
 
         await appendToFile(file_mission_name, missions); // Append data after each mission.
-        console.log(`Appended results of mission to ${file_mission_name}`);
+        console.log(`Prepared ${missions.length} child missions in ${file_mission_name}\``);
         return missions;
     } catch (error) {
         console.error('Error during prepareChildMissions:', error);
@@ -158,11 +158,11 @@ async function prepareChildMissions(browser, missionLimit = 100) {
 async function processChildMission(browser, mission) {
     const page = await browser.newPage();
     try {
-        console.log(`Processing mission: ${mission.startUrl}`);
+        console.log(`---Processing mission: ${mission.startUrl}`);
         await page.goto(mission.startUrl, { waitUntil: 'networkidle0' });
 
         await delay(5000, 8000);
-        console.log(`Delaying for after opening start page for ${mission.startUrl} `);
+        // console.log(`---Delaying for after opening start page for ${mission.startUrl} `);
 
         // 1) Try closing cookie popup
         // const acceptCookiesSelector = '#onetrust-accept-btn-handler';
@@ -180,11 +180,13 @@ async function processChildMission(browser, mission) {
         const maxScrolls = 50;  // Adjust this depending on how many times you want to attempt scrolling
         let hasNoMoreResultsButton = false;
 
+        // console.log(`---Scrolling up to ${maxScrolls} times to load more job listings...`);
+
         for (let i = 0; i < maxScrolls; i++) {
             // Check if 'No More Results' exists
             const noMoreButton = await page.$(noMoreResultsSelector);
             if (noMoreButton) {
-                console.log("Reached the end of the listings (No More Results button found).");
+                // console.log("---Reached the end of the listings (No More Results button found).");
                 hasNoMoreResultsButton = true;
                 break;
             }
@@ -195,16 +197,18 @@ async function processChildMission(browser, mission) {
             });
 
             // Give the site time to load new content
-            delay(2000, 4000);
-            console.log(`Scrolled ${i + 1} times.`);
+            delay(1500, 3000);
+            // console.log(`Scrolled ${i + 1} times.`);
         }
 
-        if (!hasNoMoreResultsButton) {
-            console.log(
-                "Warning: 'No More Results' button not found within max scroll attempts. " +
-                "Continuing with whatever data is loaded..."
-            );
-        }
+        // if (!hasNoMoreResultsButton) {
+        //     console.log(
+        //         "---Warning: 'No More Results' button not found within max scroll attempts. " +
+        //         "Continuing with whatever data is loaded..."
+        //     );
+        // }else{
+        //     console.log("---finished scrolling.");
+        // }
 
         // 3) Extract all job listings
         const currentPage = new URL(await page.url()).searchParams.get('page') || '1';
@@ -222,35 +226,35 @@ async function processChildMission(browser, mission) {
         }, currentPage, mission.initial_link_location);
 
         // 4) For each listing, open the detail link in a new tab
-        console.log(`Found ${jobListings.length} job listings on page ${currentPage}.`);
+        console.log(`---Found ${jobListings.length} job listings`);
 
         let count =0;
 
-        for (let job of jobListings) {
-            count +=1
-            if (job.jobUrl) {
-                const detailPage = await browser.newPage();
-                try {
-                    await detailPage.goto(job.jobUrl, { waitUntil: 'networkidle0' });
-                    console.log(`Opened detail page for ${job.jobUrl}`);
-                    console.log(`Delaying for after opening detail page for ${job.jobUrl} `);
-                    job.detailContent = await detailPage.content();
-                    job.detailContent = 'done';
-                    await delay(3000, 5000);
-                } catch (err) {
-                    console.error(`Error fetching details for ${job.jobUrl}:`, err);
-                    job.detailContent = null;
-                } finally {
-                    await detailPage.close();
-                }
-            }
+        // for (let job of jobListings) {
+        //     count +=1
+        //     if (job.jobUrl) {
+        //         const detailPage = await browser.newPage();
+        //         try {
+        //             await detailPage.goto(job.jobUrl, { waitUntil: 'networkidle0' });
+        //             console.log(`Opened detail page for ${job.jobUrl}`);
+        //             console.log(`Delaying for after opening detail page for ${job.jobUrl} `);
+        //             job.detailContent = await detailPage.content();
+        //             job.detailContent = 'done';
+        //             await delay(3000, 5000);
+        //         } catch (err) {
+        //             console.error(`Error fetching details for ${job.jobUrl}:`, err);
+        //             job.detailContent = null;
+        //         } finally {
+        //             await detailPage.close();
+        //         }
+        //     }
+        //
+        //     if (count % 7 === 0) {
+        //         await delay(30000, 50000);
+        //     }
+        // }
 
-            if (count % 7 === 0) {
-                await delay(30000, 50000);
-            }
-        }
-
-        console.log(`Mission ${mission.startUrl}: Collected ${jobListings.length} job listings with details.`);
+        // console.log(`---Mission ${mission.startUrl}: Collected ${jobListings.length} job listings with details.`);
         return jobListings;
     } catch (error) {
         console.error(`Error processing mission ${mission.startUrl}:`, error);
@@ -268,7 +272,7 @@ async function processChildMission(browser, mission) {
  */
 async function main() {
     // Configure mission limit from environment or default to 100.
-    const missionLimit = process.env.CHILD_MISSION_LIMIT ? parseInt(process.env.CHILD_MISSION_LIMIT) : 50;
+    const missionLimit = process.env.CHILD_MISSION_LIMIT ? parseInt(process.env.CHILD_MISSION_LIMIT) : 10000;
 
     const { browser } = await connect({
         headless: false,
@@ -294,8 +298,9 @@ async function main() {
             console.log(`Processing mission ${mission_count}`);
             const missionResult = await processChildMission(browser, mission);
             await appendToFile(file_name, missionResult); // Append data after each mission.
-            console.log(`Appended results of mission to ${file_name}`);
+            // console.log(`---Appended results of mission to ${file_name}`);
             await delay(30000, 50000);
+            // console.log(`---Delaying for next mission`);
         }
 
         console.log(`Saved a total of ${allJobs.length} job listings to ${file_name}`);
